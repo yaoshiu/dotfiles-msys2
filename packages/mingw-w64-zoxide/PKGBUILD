@@ -1,0 +1,55 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: desbma
+
+_realname=zoxide
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.9.2
+pkgrel=1
+pkgdesc='A smarter cd command for your terminal'
+arch=('any')
+mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clang32')
+url='https://github.com/ajeetdsouza/zoxide'
+license=('MIT')
+depends=('gcc-libs')
+makedepends=("${MINGW_PACKAGE_PREFIX}-rust")
+optdepends=(
+	'fzf: for interactive selection'
+)
+options=('!lto')
+source=("${_realname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
+sha256sums=('a6c2d993a02211c3d23b242c2c6faab9a2648be7a45ad1ff0586651ac827e914')
+
+prepare() {
+	cd "${_realname}-${pkgver}"
+
+	cargo fetch --locked
+}
+
+build() {
+	cd "${_realname}-${pkgver}"
+
+	cargo build --frozen --release --all-features
+}
+
+package() {
+	cd "${_realname}-${pkgver}"
+
+	# binary
+	install -vDm755 -t "${pkgdir}${MINGW_PREFIX}/bin" "target/release/$_realname"
+
+	# license
+	install -vDm644 -t "${pkgdir}${MINGW_PREFIX}/share/licenses/$_realname" LICENSE
+
+	# man pages
+	install -vDm644 -t "${pkgdir}/usr/share/man/man1" man/man1/*.1
+
+	# documentation
+	install -vDm644 -t "${pkgdir}${MINGW_PREFIX}/share/doc/$_realname" README.md
+
+	# shell auto-completions
+	cd contrib/completions
+	install -vDm644 -t "${pkgdir}/usr/share/zsh/site-functions" _zoxide
+	install -vDm644 -t "${pkgdir}/usr/share/fish/vendor_completions.d" zoxide.fish
+	install -vDm644 zoxide.bash "${pkgdir}/usr/share/bash-completion/completions/zoxide"
+}

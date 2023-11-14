@@ -1,0 +1,62 @@
+# Maintainer: Phie Ash <yaoshiu@qq.com>
+
+_realname="eza"
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.15.3
+pkgrel=1
+pkgdesc="A modern replacement for ls"
+arch=("any")
+mingw_arch=("mingw32" "mingw64" "ucrt64" "clang32" "clang64")
+url="https://github.com/eza-community/eza"
+license=("MIT")
+depends=("${MINGW_PACKAGE_PREFIX}-libgit2")
+akedepends=("unzip" "${MINGW_PACKAGE_PREFIX}-rust")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-rust")
+provides=("${_realname}" "exa")
+replaces=("exa")
+conflicts=("${_realname}" "exa")
+
+# bsdtar cannot handle archives with symlinks, so we use unzip instead.
+noextract=("${_realname}-${pkgver}.zip")
+source=("${_realname}-${pkgver}.zip::https://github.com/eza-community/eza/archive/refs/tags/v${pkgver}.zip")
+sha256sums=('f47840e3377d8720a07af5c6c9e0f353df27f85cf7ecca718a5c7554ff808dc0')
+
+prepare() {
+	cd "${srcdir}"
+	unzip "${_realname}-${pkgver}.zip"
+	cd "${_realname}-${pkgver}"
+
+	cargo fetch --locked
+}
+
+build() {
+	cd "${_realname}-${pkgver}"
+	export CARGO_TARGET_DIR=target
+
+	cargo build --frozen --release
+}
+
+check() {
+	cd "${_realname}-${pkgver}"
+	export CARGO_TARGET_DIR=target
+
+	cargo test --frozen --release
+}
+
+package() {
+	cd "${_realname}-${pkgver}"
+
+	install -Dm755 "target/release/${_realname}" "${pkgdir}${MINGW_PREFIX}/bin/${_realname}"
+
+	# Install shell completions.
+	install -Dm644 "completions/zsh/_${_realname}" "${pkgdir}/usr/share/zsh/site-functions/_${_realname}"
+	install -Dm644 "completions/bash/${_realname}" "${pkgdir}/usr/share/bash-completion/completions/${_realname}"
+	install -Dm644 "completions/fish/${_realname}.fish" "${pkgdir}/usr/share/fish/vendor_completions.d/${_realname}.fish"
+
+	install -Dm644 "README.md" "${pkgdir}${MINGW_PREFIX}/share/doc/${_realname}/README.md"
+
+	install -Dm644 "LICENCE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}
+
+# vim: ft=PKGBUILD ts=2 sw=2 et :

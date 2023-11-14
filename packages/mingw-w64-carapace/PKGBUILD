@@ -1,0 +1,42 @@
+_realname="carapace"
+_sourcename="carapace-bin"
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.28.3
+pkgrel=1
+pkgdesc="multi-shell multi-command argument completer"
+arch=('any')
+mingw_arch=('mingw64' 'mingw32' 'clang64' 'clang32' 'ucrt64')
+url="https://rsteube.github.io/carapace-bin/"
+license=("MIT")
+makedepends=("${MINGW_PACKAGE_PREFIX}-go" "git")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/rsteube/carapace-bin/archive/v${pkgver}.tar.gz")
+sha256sums=('5fe87706fcb16e9010490f3f195ff3c9f58875e249431ac32edbcf8be6bc176a')
+
+build(){
+    export CGO_CPPFLAGS="${CPPFLAGS}"
+    export CGO_CFLAGS="${CFLAGS}"
+    export CGO_CXXFLAGS="${CXXFLAGS}"
+    export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw -x -v"
+
+
+    cd "${_sourcename}-${pkgver}"
+    go generate ./cmd/...
+    go build -v -ldflags="\
+    -linkmode external \
+    -extldflags '${LDFLAGS}' \
+    -X main.version=v${pkgver} \
+    " ./cmd/carapace
+
+}
+check(){
+    cd "${_sourcename}-${pkgver}"
+    go test -v ./cmd/...
+}
+package(){
+    cd "${_sourcename}-${pkgver}"
+    install -Dm755 ${_realname} \
+        "${pkgdir}${MINGW_PREFIX}/bin/${_realname}"
+}
+
+# vim: ft=PKGBUILD :

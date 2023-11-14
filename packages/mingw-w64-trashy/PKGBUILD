@@ -1,0 +1,54 @@
+# Maintainer: KokaKiwi <kokakiwi+aur at kokakiwi dot net>
+
+_realname=trashy
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.0.0
+pkgrel=1
+pkgdesc='a cli system trash manager, alternative to rm and trash-cli'
+url="https://github.com/oberblastmeister/trashy"
+license=('MIT' 'Apache')
+arch=('any')
+mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clang32')
+conflicts=('trash-cli')
+depends=('gcc-libs')
+makedepends=("${MINGW_PACKAGE_PREFIX}-rust")
+source=(
+	"${_realname}-${pkgver}.tar.gz::https://static.crates.io/crates/${_realname}/${_realname}-${pkgver}.crate"
+	"dependencies-fix.patch"
+)
+sha256sums=('72d620b4df9c2be0b9d0e17a73a26650afd28120a50180910ecc5e486011b0cb'
+	'8ce7ca52df7ae9f0f31a66cbad8e634d7a73adcd4662655e80d009fa57f07f00')
+
+prepare() {
+	cd "${_realname}-${pkgver}"
+
+	patch -Np1 -i "${srcdir}"/dependencies-fix.patch
+
+	cargo fetch --locked
+}
+
+build() {
+	cd "${_realname}-${pkgver}"
+
+	CARGO_TARGET_DIR='target' \
+		cargo build --frozen --release --all-features
+
+	target/release/trash completions zsh >_trash.zsh
+	target/release/trash completions bash >trash.bash
+	target/release/trash completions fish >trash.fish
+	target/release/trash manpage >trash.1
+}
+
+package() {
+	cd "${_realname}-${pkgver}"
+
+	install -Dm0755 -t "${pkgdir}${MINGW_PREFIX}/bin" target/release/trash
+
+	install -Dm0644 _trash.zsh "${pkgdir}/usr/share/zsh/site-functions/_trash"
+	install -Dm0644 trash.bash "${pkgdir}/usr/share/bash-completion/completions/trash"
+	install -Dm0644 trash.fish "${pkgdir}/usr/share/fish/vendor_completions.d/trash.fish"
+	install -Dm0644 trash.1 "${pkgdir}/usr/share/man/man1/trash.1"
+
+	install -Dm0644 -t "${pkgdir}${MINGW_PREFIX}/share/licenses/$_realname" LICENSE-{APACHE,MIT}
+}

@@ -1,0 +1,46 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: Caleb Maclennan <caleb@alerque.com>
+# Contributor: Fredy García <frealgagu at gmail dot com>
+# Contributor: fuero <fuerob@gmail.com>
+
+_realname=lazygit
+pkgbase=mingw-w64-lazygit
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.40.2
+pkgrel=1
+pkgdesc='Simple terminal UI for git commands'
+url='https://github.com/jesseduffield/lazygit'
+arch=('anu')
+mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang32' 'clang64')
+license=('MIT')
+depends=('git' 'gcc-libs')
+makedepends=("${MINGW_PACKAGE_PREFIX}-go")
+source=("${url}/archive/v${pkgver}/${_realname}-${pkgver}.tar.gz")
+sha256sums=('146bd63995fcf2f2373bbc2143b3565b7a2be49a1d4e385496265ac0f69e4128')
+
+build() {
+	cd ${_realname}-${pkgver}
+
+	export CGO_CPPFLAGS="${CPPFLAGS}"
+	export CGO_CFLAGS="${CFLAGS}"
+	export CGO_CXXFLAGS="${CXXFLAGS}"
+	export GOFLAGS="-buildmode=pie -trimpath -mod=readonly -modcacherw -x -v"
+
+	go build \
+		-ldflags "\
+      -linkmode external \
+      -extldflags '${LDFLAGS}' \
+      -X main.date=$(date --date=@${SOURCE_DATE_EPOCH} -u +%Y-%m-%dT%H:%M:%SZ) \
+      -X main.buildSource=binaryRelease \
+      -X main.version=${pkgver} \
+      -X main.commit=v${pkgver} \
+    "
+}
+
+package() {
+	cd ${_realname}-${pkgver}
+	install -Dm 755 lazygit -t "${pkgdir}${MINGW_PREFIX}/bin"
+	install -Dm 644 README*.md -t "${pkgdir}${MINGW_PREFIX}/share/doc/${_realname}"
+	cp -r docs/* -t "${pkgdir}${MINGW_PREFIX}/share/doc/${_realname}"
+	install -Dm 644 LICENSE -t "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}"
+}

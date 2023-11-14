@@ -1,0 +1,6 @@
+[updates]
+auto_update = true
+
+[directories]
+cache_dir = "C:\\msys64\\home\\yaosh\\.cache\\tealdeer"
+custom_pages_dir = "C:\\msys64\\home\\yaosh\\.local\\tealdeer\\pages"

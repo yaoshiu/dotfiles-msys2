@@ -1,0 +1,56 @@
+# Maintainer: George Rawlinson <grawlinson@archlinux.org>
+# Contributor: Danilo Bargen <aur at dbrgn dot ch>
+# Contributor: Maxim Andersson <thesilentboatman@gmail.com>
+
+_realname=tealdeer
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+_binname=tldr
+pkgver=1.6.1
+pkgrel=1
+pkgdesc='A fast tldr client in Rust'
+arch=('any')
+mingw_arch=('mingw32' 'mingw64' 'ucrt64' 'clang64' 'clang32')
+url='https://github.com/dbrgn/tealdeer'
+license=('MIT' 'Apache')
+depends=('gcc-libs')
+makedepends=("git" "${MINGW_PACKAGE_PREFIX}-rust")
+provides=('tldr')
+conflicts=('tldr')
+options=('!lto')
+source=("${_realname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
+sha256sums=('d42db25a56a72faec173c86192656c5381281dc197171f385fccffd518930430')
+
+prepare() {
+	cd "${_realname}-${pkgver}"
+
+	cargo fetch --locked
+}
+
+build() {
+	cd "${_realname}-${pkgver}"
+
+	cargo build --release --frozen
+}
+
+check() {
+	cd "${_realname}-${pkgver}"
+
+	cargo test --frozen
+}
+
+package() {
+	cd "${_realname}-${pkgver}"
+
+	# binary
+	install -vDm755 -t "${pkgdir}${MINGW_PREFIX}/bin" "target/release/$_binname"
+
+	# licenses
+	install -vDm644 -t "${pkgdir}${MINGW_PREFIX}/share/licenses/$_realname" LICENSE*
+
+	# completions
+	cd completion
+	install -vDm644 bash_tealdeer "${pkgdir}/usr/share/bash-completion/completions/$_binname"
+	install -vDm644 fish_tealdeer "${pkgdir}/usr/share/fish/vendor_completions.d/$_binname.fish"
+	install -vDm644 zsh_tealdeer "${pkgdir}/usr/share/zsh/site-functions/_$_binname"
+}
