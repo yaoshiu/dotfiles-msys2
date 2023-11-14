@@ -1,0 +1,33 @@
+os: linux
+sudo: enabled
+
+env:
+  global:
+    - secure: "IVdXSV6DPKAyZqtpLSV00MSVnR6lIcWtD3F/s2HTFJQapJbEkZXSjOBFScKflBYcjE3+ui1LfLouGyJobGKen+LS7VOMmK9MG6I/Tt8heYwSMuRnTAWXpMOxuzaOTxw2DtS9fWvihUjd3c+cRCnz3OHqYdJQ8PyTHExN8pGa4d6G1I5sq9G/KDnjmD6X4EIqeXblomDTKp8axf/XUN9yDGjyooPZJLmE9D0MYEk8LXkyHqCLP30YcsnF6mG/5Cmc3QdFx2kcL/bHGIa9ckqjd1kzL4T18oT84qxw43x1nkxApI2kF0LCTJhdbSQbX0WyJDBduB0YjPGE7jINJy8fKeacAQ2IbZ9SWKFfcErzSATh4+kh3PIIc4FmuAo8Oo0qpY1Jum5qixyOB3eAewZndcLHDDBngH8X0aBSNmeL+T8h7nfQY3vdq8q/l7DtRuia7KrHnRxADjJRrfw6pQbEgs8qGPYmVEGa4JryjqrCFoI+S9/dKlIMLn4dw9UbVtcZKUs5W0OrBOpwXvgaTDxXk/jDccTJ1ETup+mAexbamJzjX4hRn4bTVuGijUjWCA4FULTzM8IRkeUfaQ3EUPxGbRqc4ECCPprVy7D/s/mCRZTC0RadRn8BYXg2T1V7IXmzZL9rlw99YCxLkB5vrPQeHa9zfvh/RWO1EjMno3gkYZo="
+
+branches:
+  only:
+    - master
+
+install:
+  - curl https://sh.rustup.rs -sSf | sh -s -- -y
+  - export PATH=$HOME/.cargo/bin:$PATH
+
+before_script:
+  - git checkout master
+
+script:
+  - ./build/auto_update.sh
+
+after_success:
+  - rustup_ver=`rustup --version | cut -d ' ' -f 2` && echo $rustup_ver
+  - cargo_ver=`cargo --version | cut -d ' ' -f 2` && echo $cargo_ver
+  - odiff=`git diff` && echo $odiff
+  - if [[ -n "$odiff" ]]; then echo "[`date -Ru`] rustup ${rustup_ver} cargo ${cargo_ver}" >> ./build/auto_update.log; fi
+  - git config --global user.name "Travis CI"
+  - git config --global user.email "26628494+ryutok@users.noreply.github.com"
+  - git add --all
+  - git commit -m "Auto update from Travis CI"
+  - git tag -f -a -m "rustup ${rustup_ver}, cargo ${cargo_ver}" ${rustup_ver}
+  - if [[ -n "$odiff" ]]; then git push https://$GH_TOKEN@github.com/ryutok/rust-zsh-completions.git master; fi
+  - if [[ -n "$odiff" ]]; then git push -f https://$GH_TOKEN@github.com/ryutok/rust-zsh-completions.git ${rustup_ver}; fi
