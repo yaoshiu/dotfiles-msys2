@@ -1,4 +1,4 @@
-# Usaage
+# Usage
 
 ```bash
 pacman -U --needed ./packages/*/*.zst
