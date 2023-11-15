@@ -26,7 +26,9 @@ mingw-w64-clang-x86_64-openmp
 mingw-w64-clang-x86_64-pkgconf
 mingw-w64-clang-x86_64-polly
 mingw-w64-clang-x86_64-pretty-derby
+mingw-w64-clang-x86_64-python-colorama
 mingw-w64-clang-x86_64-python-debugpy
+mingw-w64-clang-x86_64-python-pillow
 mingw-w64-clang-x86_64-python-pip
 mingw-w64-clang-x86_64-python-pynvim
 mingw-w64-clang-x86_64-ripgrep
