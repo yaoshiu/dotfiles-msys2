@@ -82,3 +82,4 @@ export XDG_CACHE_HOME="C:\\msys64\\home\\yaosh\\.cache"
 
 # Completions
 source ~/.zsh/rust-zsh-completions/rust.plugin.zsh 
+source <(wezterm shell-completion --shell zsh)
